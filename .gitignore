@@ -1,0 +1,17 @@
+# Cocos Creator generated / local folders (project lives in client/cocos-project)
+**/library/
+**/temp/
+**/local/
+**/build/
+**/profiles/
+**/native/
+
+# Node
+node_modules/
+**/dist/
+*.tsbuildinfo
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*.log

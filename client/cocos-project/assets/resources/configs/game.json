@@ -1,0 +1,8 @@
+{
+  "startingCash": 0,
+  "globalProductionMultiplier": 1,
+  "offlineCapSeconds": 28800,
+  "offlineEfficiency": 0.4,
+  "autosaveIntervalSeconds": 10,
+  "saveVersion": 1
+}

@@ -1,0 +1,6 @@
+{
+  "minPrice": 0.8,
+  "maxPrice": 2.6,
+  "startPrice": 1.5,
+  "refreshSeconds": 30
+}

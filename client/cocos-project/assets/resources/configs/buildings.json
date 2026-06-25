@@ -1,0 +1,22 @@
+{
+  "drill": {
+    "id": "drill_basic",
+    "displayName": "Pumpjack",
+    "baseCost": 30,
+    "costGrowth": 1.18,
+    "baseCrudePerSecond": 1,
+    "levelMultiplier": 1.15,
+    "maxLevel": 50
+  },
+  "refinery": {
+    "id": "refinery_basic",
+    "displayName": "Refinery",
+    "baseCost": 100,
+    "costGrowth": 1.2,
+    "baseFuelPerSecond": 1,
+    "levelMultiplier": 1.15,
+    "baseCapacity": 50,
+    "capacityGrowth": 1.25,
+    "maxLevel": 50
+  }
+}

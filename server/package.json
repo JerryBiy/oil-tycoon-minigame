@@ -1,0 +1,21 @@
+{
+  "name": "@oiltycoon/server",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Authoritative Node WebSocket game server for the multiplayer oil tycoon.",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "start": "node dist/index.js",
+    "build": "tsc",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@oiltycoon/shared": "*"
+  },
+  "devDependencies": {
+    "tsx": "^4.7.0",
+    "typescript": "^5.4.0",
+    "@types/node": "^20.11.0"
+  }
+}

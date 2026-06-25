@@ -1,0 +1,15 @@
+{
+  "name": "oil-tycoon-monorepo",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Monorepo for the 2.5D multiplayer oil tycoon: Cocos client, Node WebSocket server, and shared protocol/types.",
+  "workspaces": [
+    "shared",
+    "server"
+  ],
+  "scripts": {
+    "dev:server": "npm run dev --workspace @oiltycoon/server",
+    "typecheck": "npm run typecheck --workspace @oiltycoon/shared && npm run typecheck --workspace @oiltycoon/server",
+    "build": "npm run build --workspace @oiltycoon/shared && npm run build --workspace @oiltycoon/server"
+  }
+}
