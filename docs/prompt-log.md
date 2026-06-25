@@ -2,6 +2,16 @@
 
 Record each Claude Code task so future sessions have context.
 
+## 2026-06-25 — Phase 1: 2.5D walking prototype (client)
+- Branch `phase-1-2.5d-walking-map-prototype` off Phase 0.
+- Added client components (placeholder shapes, no art): `core/PlaceholderShape`, `core/YSortDepth`,
+  `movement/PlayerController` (tap-to-move + AABB collision + bounds + per-axis slide),
+  `movement/CameraFollow` (UI-space world-scroll follow with edge clamp),
+  `interaction/Obstacle`, `interaction/Interactable`, `interaction/InteractionDetector`.
+- No economy/backend/multiplayer/stealing. Camera implemented as world-root scroll (UI space) so
+  Graphics placeholders render reliably for a beginner.
+- Wiring guide: `docs/phase1-walking-wiring.md`. Next: validate in Cocos, then Phase 2 (single-player loop).
+
 ## 2026-06-25 — Plan v2: switch to multiplayer monorepo + Phase 0
 - New plan: 2.5D multiplayer oil tycoon (walking, shared rooms, refinery stealing, authoritative server).
 - Restructured into a monorepo: `client/cocos-project/`, `server/`, `shared/`, `docs/`.
