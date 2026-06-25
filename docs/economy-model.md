@@ -1,5 +1,11 @@
 # Economy Model — MVP
 
+> Phase 2 update — the loop now has a **collect** step. Drill output becomes crude; the refinery
+> converts crude into **stored fuel** (capped by capacity). The player must **walk to their own
+> refinery to Collect**, moving stored fuel into an **unlimited carried pocket** (`carriedFuel`).
+> **Selling** sells the carried pocket at the market price; fuel still in the refinery is not
+> sellable until collected. Offline production fills the refinery (capped); collection is manual on return.
+
 All numbers live in `assets/resources/configs/`. Change them there, not in code.
 
 ## Formulas

@@ -2,6 +2,8 @@ import { _decorator, Component, Label, Button } from 'cc';
 import { eventBus } from '../core/EventBus';
 import { GameManager, HudViewModel } from '../core/GameManager';
 import { formatNumber, formatMoney, formatTime } from '../core/Format';
+import { InteractionDetector } from '../interaction/InteractionDetector';
+import { RefineryMarker } from '../interaction/RefineryMarker';
 
 const { ccclass, property } = _decorator;
 
@@ -10,24 +12,32 @@ const { ccclass, property } = _decorator;
  * code (onLoad), so in the editor you only drag node references into the Inspector
  * fields below — no need to set up click events manually.
  *
+ * The Collect button is enabled only while the player stands near their own
+ * refinery (detected via the Phase 1 InteractionDetector + RefineryMarker).
+ *
  * Every field is optional: leave any you don't create yet empty and the HUD still runs.
  */
 @ccclass('HUDView')
 export class HUDView extends Component {
     @property(Label) cashLabel: Label = null!;
-    @property(Label) crudeLabel: Label = null!;
-    @property(Label) fuelLabel: Label = null!;
+    @property(Label) storedFuelLabel: Label = null!;
+    @property(Label) carriedFuelLabel: Label = null!;
     @property(Label) priceLabel: Label = null!;
     @property(Label) countdownLabel: Label = null!;
     @property(Label) ratesLabel: Label = null!;
     @property(Label) toastLabel: Label = null!;
 
+    @property(Button) collectButton: Button = null!;
     @property(Button) sellButton: Button = null!;
     @property(Button) drillButton: Button = null!;
     @property(Label) drillButtonLabel: Label = null!;
     @property(Button) refineryButton: Button = null!;
     @property(Label) refineryButtonLabel: Label = null!;
 
+    @property({ type: InteractionDetector, tooltip: "Drag the Player's InteractionDetector here." })
+    interactionDetector: InteractionDetector = null!;
+
+    private lastVm: HudViewModel | null = null;
     private onState = (vm: HudViewModel) => this.render(vm);
     private onToast = (msg: string) => this.showToast(msg);
 
@@ -35,6 +45,7 @@ export class HUDView extends Component {
         eventBus.on('stateChanged', this.onState);
         eventBus.on('toast', this.onToast);
 
+        this.collectButton?.node.on(Button.EventType.CLICK, this.handleCollect, this);
         this.sellButton?.node.on(Button.EventType.CLICK, this.handleSell, this);
         this.drillButton?.node.on(Button.EventType.CLICK, this.handleDrill, this);
         this.refineryButton?.node.on(Button.EventType.CLICK, this.handleRefinery, this);
@@ -45,13 +56,29 @@ export class HUDView extends Component {
     onDestroy() {
         eventBus.off('stateChanged', this.onState);
         eventBus.off('toast', this.onToast);
-        this.sellButton?.node.off(Button.EventType.CLICK, this.handleSell, this);
-        this.drillButton?.node.off(Button.EventType.CLICK, this.handleDrill, this);
-        this.refineryButton?.node.off(Button.EventType.CLICK, this.handleRefinery, this);
+        this.collectButton?.node?.off(Button.EventType.CLICK, this.handleCollect, this);
+        this.sellButton?.node?.off(Button.EventType.CLICK, this.handleSell, this);
+        this.drillButton?.node?.off(Button.EventType.CLICK, this.handleDrill, this);
+        this.refineryButton?.node?.off(Button.EventType.CLICK, this.handleRefinery, this);
     }
 
+    update() {
+        // Proximity changes every frame (player walking), independent of state events.
+        if (this.collectButton) {
+            this.collectButton.interactable = this.isNearRefinery() && (this.lastVm?.canCollect ?? false);
+        }
+    }
+
+    private isNearRefinery(): boolean {
+        const focused = this.interactionDetector?.focused;
+        return !!focused && !!focused.getComponent(RefineryMarker);
+    }
+
+    private handleCollect() {
+        if (this.isNearRefinery()) GameManager.instance?.collect();
+    }
     private handleSell() {
-        GameManager.instance?.sellFuel();
+        GameManager.instance?.sell();
     }
     private handleDrill() {
         GameManager.instance?.upgrade('drill');
@@ -61,9 +88,13 @@ export class HUDView extends Component {
     }
 
     private render(vm: HudViewModel) {
+        this.lastVm = vm;
         if (this.cashLabel) this.cashLabel.string = formatMoney(vm.cash);
-        if (this.crudeLabel) this.crudeLabel.string = `Crude: ${formatNumber(vm.crudeOil)}`;
-        if (this.fuelLabel) this.fuelLabel.string = `Fuel: ${formatNumber(vm.fuel)} / ${formatNumber(vm.fuelCapacity)}`;
+        // Crude is intentionally not shown — it's consumed by refining immediately and confuses players.
+        if (this.storedFuelLabel) {
+            this.storedFuelLabel.string = `Refinery: ${formatNumber(vm.storedFuel)} / ${formatNumber(vm.fuelCapacity)}`;
+        }
+        if (this.carriedFuelLabel) this.carriedFuelLabel.string = `Carrying: ${formatNumber(vm.carriedFuel)}`;
         if (this.priceLabel) this.priceLabel.string = `Price: $${vm.marketPrice.toFixed(2)}`;
         if (this.countdownLabel) this.countdownLabel.string = formatTime(vm.priceCountdown);
         if (this.ratesLabel) {
@@ -84,6 +115,7 @@ export class HUDView extends Component {
         if (this.sellButton) this.sellButton.interactable = vm.canSell;
         if (this.drillButton) this.drillButton.interactable = vm.canAffordDrill;
         if (this.refineryButton) this.refineryButton.interactable = vm.canAffordRefinery;
+        // collectButton handled in update() since it depends on player proximity.
     }
 
     private showToast(msg: string) {

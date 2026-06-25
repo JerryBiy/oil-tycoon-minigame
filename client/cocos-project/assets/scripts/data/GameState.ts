@@ -18,7 +18,10 @@ export interface GameState {
     version: number;
     cash: number;
     crudeOil: number;
+    /** Fuel held in the refinery's storage (capacity-capped). Collected by walking to it. */
     fuel: number;
+    /** Fuel carried in the player's pocket after collecting (unlimited). Sold for cash. */
+    carriedFuel: number;
     marketPrice: number;
     /** epoch ms when the current market price expires and a new one is rolled. */
     marketPriceExpiresAt: number;
@@ -39,6 +42,7 @@ export function createNewGameState(version: number, startingCash: number): GameS
         cash: startingCash,
         crudeOil: 0,
         fuel: 0,
+        carriedFuel: 0,
         marketPrice: 1,
         marketPriceExpiresAt: 0,
         buildings: {

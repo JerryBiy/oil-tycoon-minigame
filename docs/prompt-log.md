@@ -2,6 +2,19 @@
 
 Record each Claude Code task so future sessions have context.
 
+## 2026-06-25 — Phase 2: single-player tycoon loop (client)
+- Branch `phase-2-single-player-tycoon-loop` off updated `main` (Phase 0+1 merged & pushed).
+- Loop: drill → crude → refinery converts to stored fuel (capacity-capped) → walk to own refinery
+  & Collect into unlimited carried pocket → Sell pocket at market price → upgrade drill/refinery.
+- GameState: added `carriedFuel`. New pure systems `CollectSystem`, `SellSystem`. New tag
+  `interaction/RefineryMarker`. GameManager: replaced `sellFuel()` with `collect()` + `sell()`,
+  extended HudViewModel (storedFuel/carriedFuel/canCollect). HUDView: Collect button gated by
+  proximity via Phase 1 InteractionDetector + RefineryMarker; Sell sells the pocket.
+- Reused Phase 1 walking/interaction unchanged. Economy stays config-driven (buildings/market/game.json).
+- No backend/multiplayer/stealing/ads/art. Wiring: `docs/phase2-tycoon-wiring.md`.
+- UX cleanup: removed the visible Crude label (crude kept internal to the economy); added dev-only
+  `dev/DebugReset` (press R → clear save + `game.restart()`), to be removed before release.
+
 ## 2026-06-25 — Phase 1: 2.5D walking prototype (client)
 - Branch `phase-1-2.5d-walking-map-prototype` off Phase 0.
 - Added client components (placeholder shapes, no art): `core/PlaceholderShape`, `core/YSortDepth`,

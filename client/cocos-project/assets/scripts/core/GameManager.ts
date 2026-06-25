@@ -8,6 +8,8 @@ import { MarketPriceSystem } from '../systems/MarketPriceSystem';
 import { UpgradeSystem, UpgradeKind } from '../systems/UpgradeSystem';
 import { SaveSystem } from '../systems/SaveSystem';
 import { OfflineEarningsSystem } from '../systems/OfflineEarningsSystem';
+import { CollectSystem } from '../systems/CollectSystem';
+import { SellSystem } from '../systems/SellSystem';
 
 const { ccclass } = _decorator;
 
@@ -15,8 +17,11 @@ const { ccclass } = _decorator;
 export interface HudViewModel {
     cash: number;
     crudeOil: number;
-    fuel: number;
+    /** Fuel stored in the refinery (collectable by walking to it). */
+    storedFuel: number;
     fuelCapacity: number;
+    /** Fuel carried in the player's pocket (sellable). */
+    carriedFuel: number;
     marketPrice: number;
     priceCountdown: number;
     crudePerSec: number;
@@ -29,6 +34,7 @@ export interface HudViewModel {
     refineryMaxed: boolean;
     canAffordDrill: boolean;
     canAffordRefinery: boolean;
+    canCollect: boolean;
     canSell: boolean;
 }
 
@@ -51,6 +57,8 @@ export class GameManager extends Component {
     private upgrades!: UpgradeSystem;
     private save!: SaveSystem;
     private offline!: OfflineEarningsSystem;
+    private collector = new CollectSystem();
+    private seller = new SellSystem();
 
     private ready = false;
     private emitAccumulator = 0;
@@ -123,14 +131,24 @@ export class GameManager extends Component {
 
     // ---- Player actions (called by HUDView) ----
 
-    sellFuel(): void {
-        if (!this.ready || this.state.fuel <= 0) return;
-        const revenue = this.state.fuel * this.state.marketPrice;
-        this.state.cash += revenue;
-        this.state.lifetimeStats.fuelSold += this.state.fuel;
-        this.state.lifetimeStats.cashEarned += revenue;
-        this.state.fuel = 0;
-        eventBus.emit('toast', `Sold for $${revenue.toFixed(0)}`);
+    /**
+     * Collect fuel from the refinery into the carried pocket. Proximity ("near your
+     * own refinery") is gated by the HUD before calling this.
+     */
+    collect(): void {
+        if (!this.ready) return;
+        const amount = this.collector.collect(this.state);
+        if (amount <= 0) return;
+        eventBus.emit('toast', `Collected ${amount.toFixed(0)} fuel`);
+        this.emitState();
+    }
+
+    /** Sell the carried pocket of fuel at the current market price. */
+    sell(): void {
+        if (!this.ready) return;
+        const result = this.seller.sell(this.state);
+        if (result.sold <= 0) return;
+        eventBus.emit('toast', `Sold ${result.sold.toFixed(0)} fuel for $${result.revenue.toFixed(0)}`);
         this.emitState();
     }
 
@@ -168,8 +186,9 @@ export class GameManager extends Component {
         return {
             cash: s.cash,
             crudeOil: s.crudeOil,
-            fuel: s.fuel,
+            storedFuel: s.fuel,
             fuelCapacity: this.refinery.fuelCapacity(s),
+            carriedFuel: s.carriedFuel,
             marketPrice: s.marketPrice,
             priceCountdown: this.market.countdownSeconds(s, Date.now()),
             crudePerSec: this.production.crudePerSecond(s),
@@ -182,7 +201,8 @@ export class GameManager extends Component {
             refineryMaxed: this.upgrades.isMaxed(s, 'refinery'),
             canAffordDrill: this.upgrades.canAfford(s, 'drill'),
             canAffordRefinery: this.upgrades.canAfford(s, 'refinery'),
-            canSell: s.fuel > 0,
+            canCollect: s.fuel > 0,
+            canSell: s.carriedFuel > 0,
         };
     }
 }
