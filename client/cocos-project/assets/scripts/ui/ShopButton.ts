@@ -45,7 +45,7 @@ export class ShopButton extends Component {
         if (!gm || !gm.isReady) return;
         const info = gm.getShopInfo(this.catalogId);
         if (!info) return;
-        if (this.label) this.label.string = `Buy ${info.displayName} (${info.footprint})\n$${info.buyCost}`;
+        if (this.label) this.label.string = `Buy ${info.displayName} (${info.footprint})\n${info.statText}  ·  $${info.buyCost}`;
         if (this.button) this.button.interactable = info.canBuy;
     }
 }

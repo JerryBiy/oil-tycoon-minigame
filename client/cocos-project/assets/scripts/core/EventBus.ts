@@ -3,7 +3,7 @@
  * Pure TypeScript: shared module-level singleton, no Cocos dependency.
  */
 
-export type GameEvent = 'stateChanged' | 'toast';
+export type GameEvent = 'stateChanged' | 'toast' | 'purchased' | 'vfx';
 
 type Handler = (payload?: any) => void;
 

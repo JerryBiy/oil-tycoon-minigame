@@ -31,8 +31,10 @@ export class PlotRenderer extends Component {
     private gridMap: GridMap | null = null;
     private views: BuildingView[] = [];
     private lastGridKey = '';
+    private pendingPurchaseId: string | null = null;
 
     private onState = () => this.render();
+    private onPurchased = (p: { buildingId?: string }) => { this.pendingPurchaseId = p?.buildingId ?? null; };
 
     onLoad() {
         // One Graphics node for the whole grid overlay (behind buildings).
@@ -44,6 +46,7 @@ export class PlotRenderer extends Component {
 
     start() {
         eventBus.on('stateChanged', this.onState);
+        eventBus.on('purchased', this.onPurchased);
         const gm = GameManager.instance;
         if (gm) gm.playerCellProvider = () => this.playerCell();
         this.render();
@@ -51,6 +54,7 @@ export class PlotRenderer extends Component {
 
     onDisable() {
         eventBus.off('stateChanged', this.onState);
+        eventBus.off('purchased', this.onPurchased);
     }
 
     private ensureGridMap(gm: GameManager): boolean {
@@ -106,6 +110,10 @@ export class PlotRenderer extends Component {
             view.node.setPosition(center.x, center.y, 0);
             if (!view.node.active) view.node.active = true;
             view.bind(b, gm.getVisual(b.catalogId), gm.getEffectiveProduction(b), map.cellSize);
+            if (this.pendingPurchaseId && view.buildingId === this.pendingPurchaseId) {
+                this.pendingPurchaseId = null;
+                view.playPlaceVFX();
+            }
         }
         for (let i = buildings.length; i < this.views.length; i++) {
             if (this.views[i].node.active) {

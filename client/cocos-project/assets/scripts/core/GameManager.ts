@@ -32,8 +32,14 @@ export interface HudViewModel {
 export interface ShopInfo {
     catalogId: string;
     displayName: string;
+    tier: number;
     buyCost: number;
+    sellValue: number;
     footprint: string;
+    /** e.g. "+4/s base" (drill) or "holds 200 oil" (refinery). */
+    statText: string;
+    /** short best-use hint, e.g. "Best on high-multiplier land". */
+    hint: string;
     canBuy: boolean;
 }
 
@@ -188,9 +194,12 @@ export class GameManager extends Component {
             eventBus.emit('toast', this.placementMessage(check.reason));
             return;
         }
-        this.state.plot.buildings.push(createBuildingInstance(item, cell.x, cell.y));
+        const inst = createBuildingInstance(item, cell.x, cell.y);
+        this.state.plot.buildings.push(inst);
         this.state.cash -= item.buyCost;
         eventBus.emit('toast', `Placed ${item.displayName} at (${cell.x},${cell.y})`);
+        // Fire BEFORE emitState so PlotRenderer can flag the new building for reveal VFX.
+        eventBus.emit('purchased', { catalogId, buildingId: inst.id });
         this.emitState();
     }
 
@@ -298,11 +307,16 @@ export class GameManager extends Component {
     getShopInfo(catalogId: string): ShopInfo | null {
         const item = this.catalogMap.get(catalogId);
         if (!item) return null;
+        const isDrill = item.category === 'drill';
         return {
             catalogId,
             displayName: item.displayName,
+            tier: item.tier,
             buyCost: item.buyCost,
+            sellValue: item.sellValue,
             footprint: `${item.footprint.width}x${item.footprint.height}`,
+            statText: isDrill ? `+${item.productionPerSecond ?? 0}/s base` : `holds ${item.capacity ?? 0} oil`,
+            hint: isDrill ? 'Best on high-multiplier land' : 'No land bonus — place anywhere',
             canBuy: this.state.cash >= item.buyCost,
         };
     }

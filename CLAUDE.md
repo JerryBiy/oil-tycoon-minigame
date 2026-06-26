@@ -15,11 +15,15 @@ stealing, owner interruption, and highly desirable drill/refinery upgrade visual
 
 ## Phase status (plan V5 — road room, walled plots, grid plots, footprints, land strips)
 - Phase 0 setup, Phase 1 walking, Phase 2 single-player loop: **DONE, merged to `main`, pushed.**
-- **Phase 3 (V5) — grid plot placement + land strips** in progress on branch
-  `phase-3-grid-plot-placement-and-land-layers`. Grid plot (12x12), buy+place building instances with
-  footprints at the player's cell, land strips (beginner 1x free → 2x → 3x → 5x, drills only),
-  per-refinery SEQUENTIAL fill at production rate (no backlog dump), collect/sell specific refinery,
-  grid rendered data-driven (one Graphics overlay + pooled building nodes). Pending in-editor verify + commit.
+- **Phase 3 (V5) — grid plot placement + land strips: DONE, merged to `main`, pushed.** Grid plot (12x9),
+  buy+place building instances with footprints at the player's cell, land segments (beginner 1x free →
+  2x → 3x → 5x with down/mid/up segments, drills only; one contextual "Unlock Here" button), per-refinery
+  SEQUENTIAL fill at production rate (no backlog dump), collect/sell specific refinery, grid rendered
+  data-driven (one Graphics overlay + pooled building nodes).
+- **Phase 4 (V5) — badass equipment visual pipeline** in progress on branch
+  `phase-4-badass-equipment-visual-pipeline`. Placeholder visuals: per-tier color/`sizeScale` presence
+  (footprint-independent), placement reveal (scale punch + flash + `vfx`/`[sfx]` hooks via BuildingView),
+  shop stat lines, optional `PurchaseRevealPanel`. No economy changes. Pending in-editor verify + commit.
 - V5 defers to later phases (do NOT build in Phase 3): central road shared room, walled plots with
   enemy slow-on-cross, physical shop/sell-station/leaderboard landmarks (Phases 6–11).
 - Superseded, NOT committed: V4 concentric-ring land + V3 fixed slots + level-tier stash

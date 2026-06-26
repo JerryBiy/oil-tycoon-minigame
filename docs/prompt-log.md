@@ -2,6 +2,21 @@
 
 Record each Claude Code task so future sessions have context.
 
+## 2026-06-26 — Phase 4 (V5): badass equipment visual pipeline (client)
+- Phase 3 committed (`feat(client): add grid placement and land layer economy`), merged to `main`, pushed.
+  Branch `phase-4-badass-equipment-visual-pipeline` off main.
+- Placeholder visual pipeline, no economy changes:
+  - `equipment_catalog.json` visuals escalate by tier (vivid color + `sizeScale` presence 1.0→1.25; vfxKey).
+  - `BuildingView` = the per-building visual controller: footprint-sized shape colored by catalog,
+    `sizeScale` node scale (independent of footprint, so 1x1 `drill_t3` still reads powerful), and
+    `playPlaceVFX()` (scale punch + brightness flash + `eventBus.emit('vfx')` + `[sfx]` console hook).
+  - GameManager emits `'purchased' {catalogId, buildingId}` before emitState; PlotRenderer flags that
+    building and triggers its reveal VFX (so only the bought one punches, not pool-reindexed neighbors).
+  - `getShopInfo` enriched (tier/sellValue/statText/hint); ShopButton shows the stat line; new
+    `ui/PurchaseRevealPanel` (UIOpacity-hidden, pops on purchase with name/tier/stats/footprint/hint).
+  - EventBus adds `'purchased'`/`'vfx'`. Wiring/test: `docs/phase4-equipment-visuals-wiring.md` (mostly
+    automatic; only optional PurchaseRevealPanel needs wiring). Pending in-editor verify before commit.
+
 ## 2026-06-26 — Plan V5 deltas folded into Phase 3 (client)
 - V5 reframes the world as a road-based room with walled plots + physical shop/sell/leaderboard landmarks
   and enemy slow-on-cross walls — ALL deferred to Phases 6–11. Phase 3 stays grid placement + land, no walls/road.

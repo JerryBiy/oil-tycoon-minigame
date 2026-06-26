@@ -8,12 +8,12 @@
     {
       "catalogId": "drill_t2", "category": "drill", "tier": 2, "displayName": "Industrial Dual Pump",
       "buyCost": 200, "sellValue": 100, "footprint": { "width": 2, "height": 2 }, "productionPerSecond": 4,
-      "visual": { "color": "#7896B9", "sizeScale": 1.0, "vfxKey": "drill_t2" }
+      "visual": { "color": "#5E86C9", "sizeScale": 1.12, "vfxKey": "drill_t2" }
     },
     {
       "catalogId": "drill_t3", "category": "drill", "tier": 3, "displayName": "Deep-Core Compact",
       "buyCost": 900, "sellValue": 450, "footprint": { "width": 1, "height": 1 }, "productionPerSecond": 12,
-      "visual": { "color": "#557896", "sizeScale": 1.0, "vfxKey": "drill_t3" }
+      "visual": { "color": "#6FD0E0", "sizeScale": 1.25, "vfxKey": "drill_t3" }
     },
     {
       "catalogId": "refinery_t1", "category": "refinery", "tier": 1, "displayName": "Small Tank",
@@ -23,12 +23,12 @@
     {
       "catalogId": "refinery_t2", "category": "refinery", "tier": 2, "displayName": "Steel Refinery",
       "buyCost": 500, "sellValue": 250, "footprint": { "width": 2, "height": 2 }, "capacity": 200,
-      "visual": { "color": "#78A596", "sizeScale": 1.0, "vfxKey": "refinery_t2" }
+      "visual": { "color": "#6FBFA0", "sizeScale": 1.12, "vfxKey": "refinery_t2" }
     },
     {
       "catalogId": "refinery_t3", "category": "refinery", "tier": 3, "displayName": "Smokestack Refinery",
       "buyCost": 2200, "sellValue": 1100, "footprint": { "width": 2, "height": 3 }, "capacity": 600,
-      "visual": { "color": "#5F8273", "sizeScale": 1.0, "vfxKey": "refinery_t3" }
+      "visual": { "color": "#C9A23A", "sizeScale": 1.2, "vfxKey": "refinery_t3" }
     }
   ]
 }
