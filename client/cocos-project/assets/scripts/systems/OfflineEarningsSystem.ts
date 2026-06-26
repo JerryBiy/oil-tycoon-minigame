@@ -5,14 +5,13 @@ import { RefinerySystem } from './RefinerySystem';
 
 export interface OfflineReport {
     seconds: number;
-    crudeGained: number;
-    fuelGained: number;
+    oilStored: number;
 }
 
 /**
- * Grants production accrued while the player was away, at reduced efficiency and
- * capped to a maximum duration. Clock moving backwards is clamped to 0 so the
- * game never crashes or grants negative resources.
+ * Grants production accrued while away, at reduced efficiency and capped to a max
+ * duration: the away-time production is poured into the tanks (sequentially, bounded
+ * by capacity); overflow is dropped. Clock moving backwards is clamped to 0.
  */
 export class OfflineEarningsSystem {
     constructor(
@@ -24,20 +23,11 @@ export class OfflineEarningsSystem {
     apply(state: GameState, now: number): OfflineReport {
         const elapsed = (now - state.lastSaveTime) / 1000;
         const seconds = Math.max(0, Math.min(elapsed, this.game.offlineCapSeconds));
-        if (seconds <= 0) return { seconds: 0, crudeGained: 0, fuelGained: 0 };
+        if (seconds <= 0) return { seconds: 0, oilStored: 0 };
 
         const eff = this.game.offlineEfficiency;
-        const crudeProduced = this.production.crudePerSecond(state) * seconds * eff;
-
-        // Refine offline crude into fuel, bounded by refining throughput and free storage.
-        const room = Math.max(0, this.refinery.fuelCapacity(state) - state.fuel);
-        const refineThroughput = this.refinery.fuelPerSecond(state) * seconds * eff;
-        const fuelGained = Math.min(crudeProduced, refineThroughput, room);
-        const crudeGained = crudeProduced - fuelGained;
-
-        state.fuel += fuelGained;
-        state.crudeOil += crudeGained;
-
-        return { seconds, crudeGained, fuelGained };
+        const produced = this.production.totalPerSecond(state) * seconds * eff;
+        const oilStored = this.refinery.distribute(state, produced);
+        return { seconds, oilStored };
     }
 }

@@ -28,7 +28,11 @@ export class SaveSystem {
             const raw = this.read(this.key);
             if (!raw) return null;
             const parsed = JSON.parse(raw) as GameState;
-            if (!parsed || typeof parsed.cash !== 'number') return null;
+            // Require the V3 shape; older saves (no plot/building instances) start fresh.
+            if (!parsed || typeof parsed.cash !== 'number' || !parsed.plot || !Array.isArray(parsed.plot.buildings)) {
+                return null;
+            }
+            if (parsed.version !== this.currentVersion) return null;
             return this.migrate(parsed);
         } catch (e) {
             console.error('[SaveSystem] load failed, starting fresh', e);

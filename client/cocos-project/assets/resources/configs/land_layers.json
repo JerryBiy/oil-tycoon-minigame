@@ -1,0 +1,22 @@
+{
+  "gridWidth": 12,
+  "gridHeight": 9,
+  "cellSize": 64,
+  "zones": [
+    { "zoneId": "beginner",      "displayName": "Beginner Land",     "productionMultiplier": 1, "unlockCost": 0,    "unlockedByDefault": true,  "color": "#5A6E5A", "outer": { "x": 9, "y": 3, "w": 3, "h": 3 } },
+    { "zoneId": "beginner_up",   "displayName": "Beginner Land",     "productionMultiplier": 1, "unlockCost": 150,  "unlockedByDefault": false, "color": "#5A6E5A", "outer": { "x": 9, "y": 6, "w": 3, "h": 3 } },
+    { "zoneId": "beginner_down", "displayName": "Beginner Land",     "productionMultiplier": 1, "unlockCost": 150,  "unlockedByDefault": false, "color": "#5A6E5A", "outer": { "x": 9, "y": 0, "w": 3, "h": 3 } },
+
+    { "zoneId": "expansion",      "displayName": "2x Land Strip",     "productionMultiplier": 2, "unlockCost": 250,  "unlockedByDefault": false, "color": "#4E8C7A", "outer": { "x": 6, "y": 3, "w": 3, "h": 3 } },
+    { "zoneId": "expansion_up",   "displayName": "2x Land Strip",     "productionMultiplier": 2, "unlockCost": 350,  "unlockedByDefault": false, "color": "#4E8C7A", "outer": { "x": 6, "y": 6, "w": 3, "h": 3 } },
+    { "zoneId": "expansion_down", "displayName": "2x Land Strip",     "productionMultiplier": 2, "unlockCost": 350,  "unlockedByDefault": false, "color": "#4E8C7A", "outer": { "x": 6, "y": 0, "w": 3, "h": 3 } },
+
+    { "zoneId": "deep",      "displayName": "3x Land Strip",          "productionMultiplier": 3, "unlockCost": 900,  "unlockedByDefault": false, "color": "#3F6BA0", "outer": { "x": 3, "y": 3, "w": 3, "h": 3 } },
+    { "zoneId": "deep_up",   "displayName": "3x Land Strip",          "productionMultiplier": 3, "unlockCost": 1100, "unlockedByDefault": false, "color": "#3F6BA0", "outer": { "x": 3, "y": 6, "w": 3, "h": 3 } },
+    { "zoneId": "deep_down", "displayName": "3x Land Strip",          "productionMultiplier": 3, "unlockCost": 1100, "unlockedByDefault": false, "color": "#3F6BA0", "outer": { "x": 3, "y": 0, "w": 3, "h": 3 } },
+
+    { "zoneId": "core",      "displayName": "5x Land Strip",          "productionMultiplier": 5, "unlockCost": 3500, "unlockedByDefault": false, "color": "#7A4EA0", "outer": { "x": 0, "y": 3, "w": 3, "h": 3 } },
+    { "zoneId": "core_up",   "displayName": "5x Land Strip",          "productionMultiplier": 5, "unlockCost": 4000, "unlockedByDefault": false, "color": "#7A4EA0", "outer": { "x": 0, "y": 6, "w": 3, "h": 3 } },
+    { "zoneId": "core_down", "displayName": "5x Land Strip",          "productionMultiplier": 5, "unlockCost": 4000, "unlockedByDefault": false, "color": "#7A4EA0", "outer": { "x": 0, "y": 0, "w": 3, "h": 3 } }
+  ]
+}

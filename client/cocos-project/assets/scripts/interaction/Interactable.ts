@@ -19,11 +19,11 @@ export class Interactable extends Component {
     highlightColor: Color = new Color(255, 230, 120, 255);
 
     private shape: PlaceholderShape | null = null;
-    private baseColor: Color | null = null;
+    private highlighted = false;
+    private savedColor: Color | null = null;
 
     onEnable() {
         this.shape = this.getComponent(PlaceholderShape);
-        if (this.shape) this.baseColor = this.shape.fillColor.clone();
         Interactable.all.push(this);
     }
 
@@ -33,12 +33,23 @@ export class Interactable extends Component {
         this.setHighlighted(false);
     }
 
+    /**
+     * Highlight by capturing the CURRENT color at highlight-time and restoring it
+     * exactly on un-highlight. This avoids overwriting the tier color set by BuildingView
+     * (which only repaints when the building changes, never while highlighted).
+     */
     setHighlighted(on: boolean) {
         if (!this.shape) return;
         if (on) {
+            if (this.highlighted) return;
+            this.savedColor = this.shape.fillColor.clone();
+            this.highlighted = true;
             this.shape.setColor(this.highlightColor);
-        } else if (this.baseColor) {
-            this.shape.setColor(this.baseColor);
+        } else {
+            if (!this.highlighted) return;
+            if (this.savedColor) this.shape.setColor(this.savedColor);
+            this.highlighted = false;
+            this.savedColor = null;
         }
     }
 }

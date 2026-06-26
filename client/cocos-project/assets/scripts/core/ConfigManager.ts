@@ -1,24 +1,27 @@
 import { resources, JsonAsset } from 'cc';
-import { BuildingsConfig, MarketConfig, GameConfig } from '../data/ConfigTypes';
+import { MarketConfig, GameConfig, EquipmentCatalogConfig, LandLayersConfig } from '../data/ConfigTypes';
 
 /**
  * Loads JSON economy configs from assets/resources/configs/ and exposes them typed.
  * Keeping all tunable numbers here (not in code) is a hard project rule.
  */
 export class ConfigManager {
-    buildings!: BuildingsConfig;
     market!: MarketConfig;
     game!: GameConfig;
+    catalog!: EquipmentCatalogConfig;
+    land!: LandLayersConfig;
 
     async load(): Promise<void> {
-        const [buildings, market, game] = await Promise.all([
-            this.loadJson<BuildingsConfig>('configs/buildings'),
+        const [market, game, catalog, land] = await Promise.all([
             this.loadJson<MarketConfig>('configs/market'),
             this.loadJson<GameConfig>('configs/game'),
+            this.loadJson<EquipmentCatalogConfig>('configs/equipment_catalog'),
+            this.loadJson<LandLayersConfig>('configs/land_layers'),
         ]);
-        this.buildings = buildings;
         this.market = market;
         this.game = game;
+        this.catalog = catalog;
+        this.land = land;
     }
 
     private loadJson<T>(path: string): Promise<T> {

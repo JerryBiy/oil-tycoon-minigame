@@ -1,20 +1,25 @@
-import { GameState } from '../data/GameState';
-import { BuildingsConfig } from '../data/ConfigTypes';
+import { GameState, BuildingInstance } from '../data/GameState';
+import { LandLayerSystem } from './LandLayerSystem';
 
 /**
- * Drills extract crude oil into the (unlimited) crude pool.
- * crudePerSecond = count * baseCrudePerSecond * levelMultiplier^(level-1) * globalMultiplier
+ * Computes drill oil production. Each drill's output is multiplied by the land-zone
+ * multiplier of the cell it sits on (deep land 2x, core 3x). Refineries never receive
+ * the land multiplier. The produced oil is poured straight into the tanks each frame
+ * by RefinerySystem.distribute (no accumulating backlog).
  */
 export class ProductionSystem {
-    constructor(private buildings: BuildingsConfig, private globalMultiplier: number) {}
+    constructor(private land: LandLayerSystem, private globalMultiplier: number) {}
 
-    crudePerSecond(state: GameState): number {
-        const d = this.buildings.drill;
-        const b = state.buildings.drill;
-        return b.count * d.baseCrudePerSecond * Math.pow(d.levelMultiplier, b.level - 1) * this.globalMultiplier;
+    /** Effective production of a single drill instance (base * land multiplier * global). */
+    perBuilding(b: BuildingInstance): number {
+        if (b.category !== 'drill') return 0;
+        const mult = this.land.multiplierForCell(b.gridPosition.x, b.gridPosition.y);
+        return (b.productionPerSecond ?? 0) * mult * this.globalMultiplier;
     }
 
-    tick(state: GameState, dt: number): void {
-        state.crudeOil += this.crudePerSecond(state) * dt;
+    totalPerSecond(state: GameState): number {
+        let sum = 0;
+        for (const b of state.plot.buildings) sum += this.perBuilding(b);
+        return sum;
     }
 }

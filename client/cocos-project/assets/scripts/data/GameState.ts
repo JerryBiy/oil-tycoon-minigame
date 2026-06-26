@@ -1,57 +1,100 @@
 /**
- * Plain, serializable game state. No Cocos imports so it can be saved/loaded as JSON
- * and unit-reasoned about in isolation.
+ * Plain, serializable game state — Version 4 grid-plot model.
+ *
+ * The plot is a grid of cells. Players buy machines and place them as building
+ * instances with a footprint (occupying multiple cells). Land zones gate which
+ * cells are buildable and give drills a production multiplier. Old machines keep
+ * contributing until sold; selling frees their cells.
  */
 
-export interface BuildingState {
-    level: number;
-    count: number;
+import { EquipmentCatalogItem, Footprint } from './ConfigTypes';
+
+export interface Cell {
+    x: number;
+    y: number;
 }
 
-export interface LifetimeStats {
-    fuelSold: number;
-    cashEarned: number;
-    upgradesPurchased: number;
+export interface BuildingInstance {
+    id: string;
+    catalogId: string;
+    category: 'drill' | 'refinery';
+    tier: number;
+    /** anchor (bottom-left) cell of the footprint. */
+    gridPosition: Cell;
+    footprint: Footprint;
+    /** every cell this building occupies (derived from gridPosition + footprint). */
+    occupiedCells: Cell[];
+    productionPerSecond?: number;
+    capacity?: number;
+    /** refineries only: oil stored in this specific tank. */
+    storedOil?: number;
+    sellValue: number;
+}
+
+export interface PlotState {
+    plotId: string;
+    gridWidth: number;
+    gridHeight: number;
+    unlockedZoneIds: string[];
+    buildings: BuildingInstance[];
 }
 
 export interface GameState {
     version: number;
     cash: number;
-    crudeOil: number;
-    /** Fuel held in the refinery's storage (capacity-capped). Collected by walking to it. */
-    fuel: number;
-    /** Fuel carried in the player's pocket after collecting (unlimited). Sold for cash. */
-    carriedFuel: number;
+    carriedOil: number;
+    crudeBacklog: number;
     marketPrice: number;
-    /** epoch ms when the current market price expires and a new one is rolled. */
     marketPriceExpiresAt: number;
-    buildings: {
-        drill: BuildingState;
-        refinery: BuildingState;
-    };
-    unlockedLandSlots: number;
-    completedTutorialSteps: string[];
-    /** epoch ms of the last save, used for offline earnings. */
+    plot: PlotState;
     lastSaveTime: number;
-    lifetimeStats: LifetimeStats;
 }
 
-export function createNewGameState(version: number, startingCash: number): GameState {
+export function createNewGameState(
+    version: number,
+    startingCash: number,
+    gridWidth: number,
+    gridHeight: number,
+    unlockedZoneIds: string[],
+): GameState {
     return {
         version,
         cash: startingCash,
-        crudeOil: 0,
-        fuel: 0,
-        carriedFuel: 0,
+        carriedOil: 0,
+        crudeBacklog: 0,
         marketPrice: 1,
         marketPriceExpiresAt: 0,
-        buildings: {
-            drill: { level: 1, count: 1 },
-            refinery: { level: 1, count: 1 },
-        },
-        unlockedLandSlots: 1,
-        completedTutorialSteps: [],
+        plot: { plotId: 'plot_local', gridWidth, gridHeight, unlockedZoneIds: unlockedZoneIds.slice(), buildings: [] },
         lastSaveTime: Date.now(),
-        lifetimeStats: { fuelSold: 0, cashEarned: 0, upgradesPurchased: 0 },
+    };
+}
+
+let instanceCounter = 0;
+
+export function footprintCells(anchorX: number, anchorY: number, footprint: Footprint): Cell[] {
+    const cells: Cell[] = [];
+    for (let dy = 0; dy < footprint.height; dy++) {
+        for (let dx = 0; dx < footprint.width; dx++) {
+            cells.push({ x: anchorX + dx, y: anchorY + dy });
+        }
+    }
+    return cells;
+}
+
+/** Build a placed BuildingInstance from a catalog item at a grid anchor cell. */
+export function createBuildingInstance(item: EquipmentCatalogItem, anchorX: number, anchorY: number): BuildingInstance {
+    instanceCounter += 1;
+    return {
+        id: `${item.catalogId}-${anchorX}_${anchorY}-${instanceCounter}`,
+        catalogId: item.catalogId,
+        category: item.category,
+        tier: item.tier,
+        gridPosition: { x: anchorX, y: anchorY },
+        footprint: { width: item.footprint.width, height: item.footprint.height },
+        occupiedCells: footprintCells(anchorX, anchorY, item.footprint),
+        productionPerSecond: item.productionPerSecond,
+        capacity: item.capacity,
+        storedOil: item.category === 'refinery' ? 0 : undefined,
+        sellValue: item.sellValue,
     };
 }

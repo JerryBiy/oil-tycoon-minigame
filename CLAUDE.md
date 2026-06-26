@@ -13,12 +13,18 @@ stealing, owner interruption, and highly desirable drill/refinery upgrade visual
 `shared` is published in-repo as `@oiltycoon/shared`; `server` is `@oiltycoon/server`. Run
 `npm install` at the repo root once (npm workspaces) to link them.
 
-## Phase status
-- **Phase 0 (setup) — DONE.** Monorepo, shared types/protocol skeleton, runnable server health-check, docs, CLAUDE.md.
-- Single-player tycoon code from the earlier plan already lives in `client/cocos-project/assets/scripts/`
-  (core/data/systems/ui). It is the head start for **Phase 2 (single-player tycoon loop)** and will be
-  adapted there (add walk-to-collect, separate CollectSystem/SellSystem, economy.json).
-- Next up: **Phase 1 (2.5D walking map prototype)** — movement, camera, Y-sort, interaction. No economy/backend/multiplayer in Phase 1.
+## Phase status (plan V5 — road room, walled plots, grid plots, footprints, land strips)
+- Phase 0 setup, Phase 1 walking, Phase 2 single-player loop: **DONE, merged to `main`, pushed.**
+- **Phase 3 (V5) — grid plot placement + land strips** in progress on branch
+  `phase-3-grid-plot-placement-and-land-layers`. Grid plot (12x12), buy+place building instances with
+  footprints at the player's cell, land strips (beginner 1x free → 2x → 3x → 5x, drills only),
+  per-refinery SEQUENTIAL fill at production rate (no backlog dump), collect/sell specific refinery,
+  grid rendered data-driven (one Graphics overlay + pooled building nodes). Pending in-editor verify + commit.
+- V5 defers to later phases (do NOT build in Phase 3): central road shared room, walled plots with
+  enemy slow-on-cross, physical shop/sell-station/leaderboard landmarks (Phases 6–11).
+- Superseded, NOT committed: V4 concentric-ring land + V3 fixed slots + level-tier stash
+  (`v2-phase3-level-derived-tiers`). Respect the WeChat perf budget (see memory) every phase.
+- Then: Phase 4 badass equipment visuals → 5 WS backend → 6 road room+plot sync → 7 server economy → 8 stealing+walls → …
 
 ## Hard rules (from the plan)
 - Do not copy Oil Empire (or any game's) assets, UI, exact maps, names, exact upgrade values, branding, text, sounds, or code.

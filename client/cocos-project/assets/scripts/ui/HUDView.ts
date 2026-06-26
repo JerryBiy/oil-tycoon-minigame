@@ -3,41 +3,40 @@ import { eventBus } from '../core/EventBus';
 import { GameManager, HudViewModel } from '../core/GameManager';
 import { formatNumber, formatMoney, formatTime } from '../core/Format';
 import { InteractionDetector } from '../interaction/InteractionDetector';
-import { RefineryMarker } from '../interaction/RefineryMarker';
+import { BuildingView } from '../core/BuildingView';
+import { BuildingInstance } from '../data/GameState';
 
 const { ccclass, property } = _decorator;
 
 /**
- * Renders game state and routes button taps to GameManager. Buttons are wired in
- * code (onLoad), so in the editor you only drag node references into the Inspector
- * fields below — no need to set up click events manually.
- *
- * The Collect button is enabled only while the player stands near their own
- * refinery (detected via the Phase 1 InteractionDetector + RefineryMarker).
- *
- * Every field is optional: leave any you don't create yet empty and the HUD still runs.
+ * Renders the top-bar HUD and routes action buttons to GameManager.
+ *  - Collect / Sell-Building act on the building the player is standing near
+ *    (resolved via the Phase 1 InteractionDetector + the focused node's BuildingView).
+ *  - Sell Oil sells the carried pocket at the market price.
+ * Button clicks are wired in code; just drag node references in the Inspector.
  */
 @ccclass('HUDView')
 export class HUDView extends Component {
     @property(Label) cashLabel: Label = null!;
-    @property(Label) storedFuelLabel: Label = null!;
-    @property(Label) carriedFuelLabel: Label = null!;
+    @property(Label) carriedOilLabel: Label = null!;
     @property(Label) priceLabel: Label = null!;
     @property(Label) countdownLabel: Label = null!;
-    @property(Label) ratesLabel: Label = null!;
+    @property(Label) productionLabel: Label = null!;
+    @property(Label) storageLabel: Label = null!;
+    @property(Label) buildingsLabel: Label = null!;
+    /** Debug: the land cell/zone/multiplier the player is currently standing on. */
+    @property(Label) zoneLabel: Label = null!;
+    /** Debug: the stored/capacity of the building the player is standing near. */
+    @property(Label) selectedRefineryLabel: Label = null!;
     @property(Label) toastLabel: Label = null!;
 
     @property(Button) collectButton: Button = null!;
-    @property(Button) sellButton: Button = null!;
-    @property(Button) drillButton: Button = null!;
-    @property(Label) drillButtonLabel: Label = null!;
-    @property(Button) refineryButton: Button = null!;
-    @property(Label) refineryButtonLabel: Label = null!;
+    @property(Button) sellOilButton: Button = null!;
+    @property(Button) sellBuildingButton: Button = null!;
 
     @property({ type: InteractionDetector, tooltip: "Drag the Player's InteractionDetector here." })
     interactionDetector: InteractionDetector = null!;
 
-    private lastVm: HudViewModel | null = null;
     private onState = (vm: HudViewModel) => this.render(vm);
     private onToast = (msg: string) => this.showToast(msg);
 
@@ -46,9 +45,8 @@ export class HUDView extends Component {
         eventBus.on('toast', this.onToast);
 
         this.collectButton?.node.on(Button.EventType.CLICK, this.handleCollect, this);
-        this.sellButton?.node.on(Button.EventType.CLICK, this.handleSell, this);
-        this.drillButton?.node.on(Button.EventType.CLICK, this.handleDrill, this);
-        this.refineryButton?.node.on(Button.EventType.CLICK, this.handleRefinery, this);
+        this.sellOilButton?.node.on(Button.EventType.CLICK, this.handleSellOil, this);
+        this.sellBuildingButton?.node.on(Button.EventType.CLICK, this.handleSellBuilding, this);
 
         if (this.toastLabel) this.toastLabel.string = '';
     }
@@ -57,65 +55,70 @@ export class HUDView extends Component {
         eventBus.off('stateChanged', this.onState);
         eventBus.off('toast', this.onToast);
         this.collectButton?.node?.off(Button.EventType.CLICK, this.handleCollect, this);
-        this.sellButton?.node?.off(Button.EventType.CLICK, this.handleSell, this);
-        this.drillButton?.node?.off(Button.EventType.CLICK, this.handleDrill, this);
-        this.refineryButton?.node?.off(Button.EventType.CLICK, this.handleRefinery, this);
+        this.sellOilButton?.node?.off(Button.EventType.CLICK, this.handleSellOil, this);
+        this.sellBuildingButton?.node?.off(Button.EventType.CLICK, this.handleSellBuilding, this);
     }
 
     update() {
-        // Proximity changes every frame (player walking), independent of state events.
+        const b = this.focusedBuilding();
         if (this.collectButton) {
-            this.collectButton.interactable = this.isNearRefinery() && (this.lastVm?.canCollect ?? false);
+            this.collectButton.interactable = !!b && b.category === 'refinery' && (b.storedOil ?? 0) > 0;
+        }
+        if (this.sellBuildingButton) {
+            this.sellBuildingButton.interactable = !!b;
+        }
+        if (this.selectedRefineryLabel) {
+            if (b && b.category === 'refinery') {
+                this.selectedRefineryLabel.string =
+                    `Near Refinery: ${formatNumber(b.storedOil ?? 0)} / ${formatNumber(b.capacity ?? 0)}`;
+            } else if (b) {
+                this.selectedRefineryLabel.string = `Near ${b.category} T${b.tier}`;
+            } else {
+                this.selectedRefineryLabel.string = '';
+            }
+        }
+        if (this.zoneLabel) {
+            const cell = GameManager.instance?.getPlayerCellInfo() ?? null;
+            this.zoneLabel.string = cell
+                ? `Cell (${cell.x},${cell.y}) — ${cell.zoneName} ${cell.multiplier}x${cell.unlocked ? '' : ' [locked]'}`
+                : 'Off plot';
         }
     }
 
-    private isNearRefinery(): boolean {
+    /** The building instance the player is currently focused on, if any. */
+    private focusedBuilding(): BuildingInstance | null {
         const focused = this.interactionDetector?.focused;
-        return !!focused && !!focused.getComponent(RefineryMarker);
+        if (!focused) return null;
+        const view = focused.getComponent(BuildingView);
+        if (!view || !view.buildingId) return null;
+        return GameManager.instance?.getBuilding(view.buildingId) ?? null;
     }
 
     private handleCollect() {
-        if (this.isNearRefinery()) GameManager.instance?.collect();
+        const b = this.focusedBuilding();
+        if (b && b.category === 'refinery') GameManager.instance?.collectRefinery(b.id);
     }
-    private handleSell() {
-        GameManager.instance?.sell();
+    private handleSellOil() {
+        GameManager.instance?.sellOil();
     }
-    private handleDrill() {
-        GameManager.instance?.upgrade('drill');
-    }
-    private handleRefinery() {
-        GameManager.instance?.upgrade('refinery');
+    private handleSellBuilding() {
+        const b = this.focusedBuilding();
+        if (b) GameManager.instance?.sellBuilding(b.id);
     }
 
     private render(vm: HudViewModel) {
-        this.lastVm = vm;
         if (this.cashLabel) this.cashLabel.string = formatMoney(vm.cash);
-        // Crude is intentionally not shown — it's consumed by refining immediately and confuses players.
-        if (this.storedFuelLabel) {
-            this.storedFuelLabel.string = `Refinery: ${formatNumber(vm.storedFuel)} / ${formatNumber(vm.fuelCapacity)}`;
-        }
-        if (this.carriedFuelLabel) this.carriedFuelLabel.string = `Carrying: ${formatNumber(vm.carriedFuel)}`;
+        if (this.carriedOilLabel) this.carriedOilLabel.string = `Carrying: ${formatNumber(vm.carriedOil)}`;
         if (this.priceLabel) this.priceLabel.string = `Price: $${vm.marketPrice.toFixed(2)}`;
         if (this.countdownLabel) this.countdownLabel.string = formatTime(vm.priceCountdown);
-        if (this.ratesLabel) {
-            this.ratesLabel.string = `+${formatNumber(vm.crudePerSec)} crude/s   +${formatNumber(vm.fuelPerSec)} fuel/s`;
+        if (this.productionLabel) this.productionLabel.string = `+${formatNumber(vm.totalProductionPerSec)} oil/s`;
+        if (this.storageLabel) {
+            this.storageLabel.string = `Refineries: ${formatNumber(vm.totalStored)} / ${formatNumber(vm.totalCapacity)}`;
         }
+        if (this.buildingsLabel) this.buildingsLabel.string = `Buildings: ${vm.buildingCount}`;
 
-        if (this.drillButtonLabel) {
-            this.drillButtonLabel.string = vm.drillMaxed
-                ? `Drill MAX (Lv${vm.drillLevel})`
-                : `Upgrade Drill Lv${vm.drillLevel} - ${formatMoney(vm.drillCost)}`;
-        }
-        if (this.refineryButtonLabel) {
-            this.refineryButtonLabel.string = vm.refineryMaxed
-                ? `Refinery MAX (Lv${vm.refineryLevel})`
-                : `Upgrade Refinery Lv${vm.refineryLevel} - ${formatMoney(vm.refineryCost)}`;
-        }
-
-        if (this.sellButton) this.sellButton.interactable = vm.canSell;
-        if (this.drillButton) this.drillButton.interactable = vm.canAffordDrill;
-        if (this.refineryButton) this.refineryButton.interactable = vm.canAffordRefinery;
-        // collectButton handled in update() since it depends on player proximity.
+        if (this.sellOilButton) this.sellOilButton.interactable = vm.canSellOil;
+        // collect / sell-building handled in update() (depend on player proximity).
     }
 
     private showToast(msg: string) {
